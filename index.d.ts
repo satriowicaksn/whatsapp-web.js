@@ -385,10 +385,10 @@ declare namespace WAWebJS {
      * Remote store interface
      */
     export interface Store {
-        sessionExists: ({session: string}) => Promise<boolean> | boolean,
-        delete: ({session: string}) => Promise<any> | any,
-        save: ({session: string}) => Promise<any> | any,
-        extract: ({session: string}) => Promise<any> | any,
+        sessionExists: ({session: string}: any) => Promise<boolean> | boolean,
+        delete: ({session: string}: any) => Promise<any> | any,
+        save: ({session: string}: any) => Promise<any> | any,
+        extract: ({session: string}: any) => Promise<any> | any,
     }
 
     /**
@@ -729,7 +729,7 @@ declare namespace WAWebJS {
          */
         reply: (content: MessageContent, chatId?: string, options?: MessageSendOptions) => Promise<Message>,
         /** React to this message with an emoji*/
-        react: (reaction: string) => Promise,
+        react: (reaction: string) => Promise<void>,
         /** 
          * Forwards this message to another chat
          */
