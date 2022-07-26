@@ -114,7 +114,7 @@ declare namespace WAWebJS {
 
         /** Send a message to a specific chatId */
         sendMessage(chatId: string, content: MessageContent, options?: MessageSendOptions): Promise<Message>
-
+        
         /** Searches for messages */
         searchMessages(query: string, options?: { chatId?: string, page?: number, limit?: number }): Promise<Message[]>
 
@@ -141,7 +141,7 @@ declare namespace WAWebJS {
          * @param displayName New display name
          */
         setDisplayName(displayName: string): Promise<boolean>
-
+                
         /** Changes and returns the archive state of the Chat */
         unarchiveChat(chatId: string): Promise<boolean>
 
@@ -256,6 +256,9 @@ declare namespace WAWebJS {
 
         /** Emitted when the client has initialized and is ready to receive messages */
         on(event: 'ready', listener: () => void): this
+
+        /** Emitted when the RemoteAuth session is saved successfully on the external Database */
+        on(event: 'remote_session_saved', listener: () => void): this
     }
 
     /** Current connection information */
@@ -345,6 +348,9 @@ declare namespace WAWebJS {
             failureEventPayload?: any
         }>;
         getAuthEventPayload: () => Promise<any>;
+        afterAuthReady: () => Promise<void>;
+        disconnect: () => Promise<void>;
+        destroy: () => Promise<void>;
         logout: () => Promise<void>;
     }
 
@@ -364,6 +370,30 @@ declare namespace WAWebJS {
             clientId?: string,
             dataPath?: string
         })
+    }
+    
+    /**
+     * Remote-based authentication
+     */
+     export class RemoteAuth extends AuthStrategy {
+        public clientId?: string;
+        public dataPath?: string;
+        constructor(options?: {
+            store: Store,
+            clientId?: string,
+            dataPath?: string,
+            backupSyncIntervalMs: number
+        })
+    }
+
+    /** 
+     * Remote store interface
+     */
+    export interface Store {
+        sessionExists: ({session: string}) => Promise<boolean> | boolean,
+        delete: ({session: string}) => Promise<any> | any,
+        save: ({session: string}) => Promise<any> | any,
+        extract: ({session: string, path: string}) => Promise<any> | any,
     }
 
     /**
@@ -466,6 +496,7 @@ declare namespace WAWebJS {
         DISCONNECTED = 'disconnected',
         STATE_CHANGED = 'change_state',
         BATTERY_CHANGED = 'change_battery',
+        REMOTE_SESSION_SAVED = 'remote_session_saved'
     }
 
     /** Group notification types */
@@ -604,6 +635,8 @@ declare namespace WAWebJS {
         ack: MessageAck,
         /** If the message was sent to a group, this field will contain the user that sent the message. */
         author?: string,
+        /** String that represents from which device type the message was sent */
+        deviceType: string,
         /** Message content */
         body: string,
         /** Indicates if the message was a broadcast */
@@ -687,7 +720,7 @@ declare namespace WAWebJS {
         acceptGroupV4Invite: () => Promise<{status: number}>,
         /** Deletes the message from the chat */
         delete: (everyone?: boolean) => Promise<void>,
-        /** Downloads and returns the attatched message media */
+        /** Downloads and returns the attached message media */
         downloadMedia: () => Promise<MessageMedia>,
         /** Returns the Chat this message was sent in */
         getChat: () => Promise<Chat>,
@@ -703,6 +736,8 @@ declare namespace WAWebJS {
          * If not, it will send the message in the same Chat as the original message was sent. 
          */
         reply: (content: MessageContent, chatId?: string, options?: MessageSendOptions) => Promise<Message>,
+        /** React to this message with an emoji*/
+        react: (reaction: string) => Promise<void>,
         /** 
          * Forwards this message to another chat
          */
@@ -711,7 +746,7 @@ declare namespace WAWebJS {
         star: () => Promise<void>,
         /** Unstar this message */
         unstar: () => Promise<void>,
-        /** Get information about message delivery statuso */
+        /** Get information about message delivery status */
         getInfo: () => Promise<MessageInfo | null>,
         /**
          * Gets the order associated with a given message
@@ -816,7 +851,7 @@ declare namespace WAWebJS {
         static fromUrl: (url: string, options?: MediaFromURLOptions) => Promise<MessageMedia>
     }
 
-    export type MessageContent = string | MessageMedia | Location | Contact | Contact[] | List | Buttons 
+    export type MessageContent = string | MessageMedia | Location | Contact | Contact[] | List | Buttons
 
     /**
      * Represents a Contact on WhatsApp
@@ -1287,7 +1322,7 @@ declare namespace WAWebJS {
         constructor(body: string, buttonText: string, sections: Array<any>, title?: string | null, footer?: string | null)
     }
     
-    /** Message type buttons */
+    /** Message type Buttons */
     export class Buttons {
         body: string | MessageMedia
         buttons: Array<{ buttonId: string; buttonText: {displayText: string}; type: number }>
