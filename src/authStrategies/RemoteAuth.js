@@ -1,19 +1,19 @@
-"use strict";
+'use strict';
 
 /* Require Optional Dependencies */
 try {
-    var fs = require("fs-extra");
-    var unzipper = require("unzipper");
-    var archiver = require("archiver");
+    var fs = require('fs-extra');
+    var unzipper = require('unzipper');
+    var archiver = require('archiver');
 } catch {
     fs = undefined;
     unzipper = undefined;
     archiver = undefined;
 }
 
-const path = require("path");
-const { Events } = require("./../util/Constants");
-const BaseAuthStrategy = require("./BaseAuthStrategy");
+const path = require('path');
+const { Events } = require('./../util/Constants');
+const BaseAuthStrategy = require('./BaseAuthStrategy');
 
 /**
  * Remote-based authentication
@@ -27,32 +27,32 @@ class RemoteAuth extends BaseAuthStrategy {
     constructor({ clientId, dataPath, store, backupSyncIntervalMs } = {}) {
         if (!fs && !unzipper && !archiver)
             throw new Error(
-                "Optional Dependencies [fs-extra, unzipper, archiver] are required to use RemoteAuth. Make sure to run npm install correctly and remove the --no-optional flag"
+                'Optional Dependencies [fs-extra, unzipper, archiver] are required to use RemoteAuth. Make sure to run npm install correctly and remove the --no-optional flag'
             );
         super();
 
         const idRegex = /^[-_\w]+$/i;
         if (clientId && !idRegex.test(clientId)) {
             throw new Error(
-                "Invalid clientId. Only alphanumeric characters, underscores and hyphens are allowed."
+                'Invalid clientId. Only alphanumeric characters, underscores and hyphens are allowed.'
             );
         }
         if (!backupSyncIntervalMs || backupSyncIntervalMs < 60000) {
             throw new Error(
-                "Invalid backupSyncIntervalMs. Accepts values starting from 60000ms {1 minute}."
+                'Invalid backupSyncIntervalMs. Accepts values starting from 60000ms {1 minute}.'
             );
         }
-        if (!store) throw new Error("Remote database store is required.");
+        if (!store) throw new Error('Remote database store is required.');
 
         this.store = store;
         this.clientId = clientId;
         this.backupSyncIntervalMs = backupSyncIntervalMs;
-        this.dataPath = path.resolve(dataPath || "./.wwebjs_auth/");
+        this.dataPath = path.resolve(dataPath || './.wwebjs_auth/');
         this.tempDir = `${this.dataPath}/wwebjs_temp_session`;
         this.requiredDirs = [
-            "Default",
-            "IndexedDB",
-            "Local Storage",
+            'Default',
+            'IndexedDB',
+            'Local Storage',
         ]; /* => Required Files & Dirs in WWebJS to restore session */
     }
 
@@ -60,7 +60,7 @@ class RemoteAuth extends BaseAuthStrategy {
         const puppeteerOpts = this.client.options.puppeteer;
         const sessionDirName = this.clientId
             ? `RemoteAuth-RemoteAuth-${this.clientId}`
-            : "RemoteAuth";
+            : 'RemoteAuth';
         const dirPath = path.join(this.dataPath, sessionDirName);
 
         if (
@@ -68,7 +68,7 @@ class RemoteAuth extends BaseAuthStrategy {
             puppeteerOpts.userDataDir !== dirPath
         ) {
             throw new Error(
-                "RemoteAuth is not compatible with a user-supplied userDataDir."
+                'RemoteAuth is not compatible with a user-supplied userDataDir.'
             );
         }
 
@@ -174,7 +174,7 @@ class RemoteAuth extends BaseAuthStrategy {
     }
 
     async compressSession() {
-        const archive = archiver("zip");
+        const archive = archiver('zip');
         const stream = fs.createWriteStream(`${this.sessionName}.zip`);
 
         await fs.copy(this.userDataDir, this.tempDir).catch(() => {});
@@ -182,10 +182,10 @@ class RemoteAuth extends BaseAuthStrategy {
         return new Promise((resolve, reject) => {
             archive
                 .directory(this.tempDir, false)
-                .on("error", (err) => reject(err))
+                .on('error', (err) => reject(err))
                 .pipe(stream);
 
-            stream.on("close", () => resolve());
+            stream.on('close', () => resolve());
             archive.finalize();
         });
     }
@@ -199,14 +199,14 @@ class RemoteAuth extends BaseAuthStrategy {
                         path: this.userDataDir,
                     })
                 )
-                .on("error", (err) => reject(err))
-                .on("finish", () => resolve());
+                .on('error', (err) => reject(err))
+                .on('finish', () => resolve());
         });
         await fs.promises.unlink(compressedSessionPath);
     }
 
     async deleteMetadata() {
-        const sessionDirs = [this.tempDir, path.join(this.tempDir, "Default")];
+        const sessionDirs = [this.tempDir, path.join(this.tempDir, 'Default')];
         for (const dir of sessionDirs) {
             const sessionFiles = await fs.promises.readdir(dir);
             for (const element of sessionFiles) {
