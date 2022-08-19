@@ -106,7 +106,7 @@ class RemoteAuth extends BaseAuthStrategy {
             await this.compressSession();
             await this.store.save({session: this.sessionName});
             if(options && !options.saveZip) {
-                console.log('unLink zip file ..')
+                console.log('unLink zip file ..');
                 await fs.promises.unlink(`${this.sessionName}.zip`);
             }
             await fs.promises.rm(`${this.tempDir}`, {
