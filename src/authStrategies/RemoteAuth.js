@@ -111,7 +111,7 @@ class RemoteAuth extends BaseAuthStrategy {
             }
             if(options && options.saveZip) {
                 console.log('success saving zip file');
-                this.client.emit("backup_session");
+                this.client.emit('backup_session');
             }
             await fs.promises.rm(`${this.tempDir}`, {
                 recursive: true,
