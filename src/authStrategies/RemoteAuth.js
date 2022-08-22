@@ -95,7 +95,7 @@ class RemoteAuth extends BaseAuthStrategy {
         var self = this;
         this.backupSync = setInterval(async function () {
             await self.storeRemoteSession({saveZip: true});
-            console.log(`[BACKUP] ${this.clientId} ..`);
+            console.log(`[BACKUP] running ..`);
         }, this.backupSyncIntervalMs);
     }
 
@@ -108,6 +108,10 @@ class RemoteAuth extends BaseAuthStrategy {
             if(options && !options.saveZip) {
                 console.log('unLink zip file ..');
                 await fs.promises.unlink(`${this.sessionName}.zip`);
+            }
+            if(options && options.saveZip) {
+                console.log('success saving zip file');
+                this.client.emit("backup_session");
             }
             await fs.promises.rm(`${this.tempDir}`, {
                 recursive: true,
@@ -127,12 +131,9 @@ class RemoteAuth extends BaseAuthStrategy {
                 force: true
             }).catch(() => {});
         }
-        const existsZip = fs.existsSync(`./${compressedSessionPath}`);
         if (sessionExists) {
-            if(existsZip) {
-                await this.store.extract({session: this.sessionName, path: compressedSessionPath});
-                await this.unCompressSession(compressedSessionPath);
-            }
+            await this.store.extract({session: this.sessionName, path: compressedSessionPath});
+            await this.unCompressSession(compressedSessionPath);
         } else {
             fs.mkdirSync(this.userDataDir, { recursive: true });
         }
